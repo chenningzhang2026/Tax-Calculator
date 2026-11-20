@@ -1,0 +1,918 @@
+<!DOCTYPE html><html lang="zh-Hant-HK"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>香港薪俸稅計算器｜2026/27 課稅年度估算</title>
+<meta name="description" content="按所選課稅年度的稅率、免稅額及扣除上限估算香港薪俸稅，並模擬加薪或花紅後的稅後增收。所有計算在瀏覽器內完成。">
+<meta name="referrer" content="no-referrer">
+<style>
+:root{
+  /* 主色：深藍 #001246；強調色：黃色 #FFCA05 */
+  --ink:#001246;--yellow:#FFCA05;--yellow-dk:#E6B400;--text:#0f1530;
+  --mute:#5a6280;--rule:#d5d9e6;--soft:#f3f5fa;
+  --err:#b3261e;--errbg:#fdecea;
+  --gold:#7a5c00;--goldbg:#fff3bf;
+  --green:#17603a;--greenbg:#e6f2ea;--amber:#5c4500;--amberbg:#fff6cc;--blue:#001246;
+  --serif:"Noto Serif TC","Source Han Serif TC","Songti TC","PMingLiU",Georgia,serif;
+  --sans:"PingFang HK","PingFang TC","Noto Sans TC","Source Han Sans TC","Microsoft JhengHei","Heiti TC",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;font:16px/1.65 var(--sans);color:var(--text);background:#fff;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+h1,h2,h3{color:var(--ink)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+.skip{position:absolute;left:-999px;top:0;background:var(--ink);color:#fff;padding:8px 12px;z-index:200}
+.skip:focus{left:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* topbar */
+.topbar{border-bottom:1px solid var(--rule);font-size:12px;color:var(--mute)}
+.topbar .wrap{display:flex;justify-content:space-between;align-items:center;min-height:36px;gap:12px}
+.topbar .r{display:flex;gap:14px;align-items:center}
+.pill{font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:11px;padding:3px 9px;border:1px solid var(--ink);color:var(--ink);text-decoration:none}
+.pill.gold{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+/* masthead */
+.masthead .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;padding-top:18px;padding-bottom:16px}
+.logo{display:flex;flex-direction:column;align-items:center;text-decoration:none;gap:2px;color:var(--ink)}
+.logo .mark{display:flex;align-items:center;gap:10px}
+.logo i{font-style:normal;background:var(--ink);color:var(--yellow);font-weight:900;font-size:26px;line-height:1;padding:6px 10px}
+.logo b{font-size:36px;font-weight:900;letter-spacing:.03em;line-height:1;color:var(--ink)}
+.logo small{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.mh-left{font-size:12px;color:var(--mute);font-weight:600}
+.yearbox{justify-self:end;display:flex;flex-direction:column;gap:2px;font-size:12px;font-weight:700;color:var(--ink)}
+.yearbox select{font:inherit;font-size:15px;font-weight:800;padding:8px 32px 8px 12px;border:2px solid var(--ink);background:#fff;color:var(--ink);border-radius:0}
+.req{color:var(--err)}
+/* nav */
+.sections{position:sticky;top:0;z-index:60;background:#fff;border-top:3px solid var(--ink);border-bottom:1px solid var(--rule)}
+.sections .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.sections a{white-space:nowrap;text-decoration:none;font-weight:800;font-size:14px;padding:12px 14px;border-bottom:3px solid transparent;color:var(--ink)}
+.sections a:hover,.sections a.on{border-bottom-color:var(--yellow)}
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:40px;padding:34px 0 26px}
+.kicker{display:inline-block;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:linear-gradient(transparent 58%,var(--yellow) 58%);padding:0 2px}
+.hero h1{font-size:clamp(32px,5.2vw,56px);line-height:1.12;font-weight:900;margin:8px 0 14px;letter-spacing:-.01em}
+.deck{font-family:var(--serif);font-size:19px;color:#2a3150;margin:0 0 14px;max-width:46em}
+.byline{font-size:12px;color:var(--mute)}
+.byline b{color:var(--ink)}
+.latest{list-style:none;margin:0;padding:0;border-top:3px solid var(--ink)}
+.latest h2{font-size:14px;margin:10px 0 4px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.latest li{padding:10px 0;border-bottom:1px solid var(--rule);font-size:14.5px;line-height:1.45}
+.latest li em{display:block;font-style:normal;font-size:11px;font-weight:800;color:var(--ink);letter-spacing:.06em;text-transform:uppercase}
+.latest li em::before{content:"";display:inline-block;width:8px;height:8px;background:var(--yellow);margin-right:6px}
+.latest li.dim{color:var(--mute)}
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:44px;align-items:start}
+.side{position:sticky;top:64px}
+.block{padding:26px 0 30px;border-top:1px solid var(--ink)}
+.block>.kicker{margin-bottom:2px}
+.block h2{font-size:28px;line-height:1.25;margin:0 0 6px;font-weight:900}
+.block h3{font-size:19px;margin:22px 0 8px;font-weight:800}
+.lead{color:var(--mute);margin:0 0 18px;font-size:14.5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px}
+.field{margin:0 0 16px;border:0;padding:0;min-width:0}
+.field label,.field legend{display:block;font-weight:700;font-size:14.5px;margin-bottom:5px;padding:0;color:var(--ink)}
+.hint{font-size:12.5px;color:var(--mute);margin:4px 0 0;line-height:1.5}
+.err{font-size:13px;color:var(--err);font-weight:700;margin:4px 0 0;min-height:0}
+.err:empty{display:none}
+.err::before{content:"⚠ "}
+.money{display:flex;border:1px solid #7f89a8;border-radius:2px;background:#fff}
+.money>span{padding:10px;background:var(--soft);border-right:1px solid #ccd1e0;font-weight:800;font-size:13px;color:var(--mute);display:flex;align-items:center}
+.money input{border:0;flex:1;min-width:0;padding:10px;font:inherit;text-align:right;font-variant-numeric:tabular-nums;background:transparent;color:var(--text)}
+.money:focus-within,input[type=date]:focus,select:focus,.num:focus{outline:3px solid var(--ink);outline-offset:1px;box-shadow:0 0 0 5px var(--yellow)}
+.money input:focus{outline:none}
+input[aria-invalid=true]{background:#fff4f2}
+.money:has(input[aria-invalid=true]){border-color:var(--err);border-width:2px}
+input[type=date],select,.num{font:inherit;padding:9px 10px;border:1px solid #7f89a8;border-radius:2px;background:#fff;width:100%;color:var(--text)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid #7f89a8;border-radius:2px;overflow:hidden}
+.seg label{position:relative;margin:0;font-weight:600}
+.seg input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+.seg span{display:block;padding:8px 14px;font-size:14px;background:#fff;border-right:1px solid #ccd1e0;color:var(--ink)}
+.seg label:last-child span{border-right:0}
+.seg input:checked+span{background:var(--ink);color:#fff}
+.seg input:checked+span::before{content:"✓ ";color:var(--yellow)}
+.seg input:focus-visible+span{outline:3px solid var(--ink);outline-offset:-3px}
+.seg input:checked:focus-visible+span{outline-color:var(--yellow)}
+.chk label{display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer}
+.chk input{margin-top:5px;width:18px;height:18px;accent-color:var(--ink);flex:none}
+.rowcard{border:1px solid var(--rule);border-left:4px solid var(--ink);padding:14px 16px 4px;margin:0 0 14px;background:#fff}
+.rowhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.rowstatus{font-size:13.5px;font-weight:700;margin:2px 0 12px;padding:8px 10px;background:var(--soft)}
+.rowstatus.ok{background:var(--greenbg);color:var(--green)}
+.rowstatus.no{background:var(--errbg);color:#8e1a14}
+.rowstatus.pending,.rowstatus.incomplete{background:var(--amberbg);color:var(--amber)}
+.empty{font-size:14px;color:var(--mute);border:1px dashed #aab2cc;padding:12px 14px;margin:0 0 12px}
+.btn{font:inherit;font-weight:800;font-size:14px;padding:10px 16px;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-block;line-height:1.3}
+.btn:hover{background:#0a2262}
+.btn.ghost{background:#fff;color:var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.btn.red{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+.btn.red:hover{background:var(--yellow-dk);border-color:var(--yellow-dk)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.link{font:inherit;background:none;border:0;padding:0;color:var(--ink);font-weight:700;text-decoration:underline;cursor:pointer;font-size:13px}
+.link.danger{color:var(--err)}
+details.fold{border:1px solid var(--rule);padding:10px 14px;margin:0 0 16px;background:var(--soft)}
+details.fold summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--ink)}
+.banner{border-left:5px solid var(--yellow);background:var(--amberbg);padding:10px 14px;margin:0 0 12px;font-size:14px;color:var(--text)}
+.banner.info{border-color:var(--ink);background:#e8ecf6}
+.banner.bad{border-color:var(--err);background:var(--errbg)}
+.banner strong{display:block;color:var(--ink)}
+/* side summary */
+.sum{border-top:3px solid var(--ink);padding-top:10px}
+.sum .lab{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.bignum{font-family:var(--serif);font-weight:900;font-size:46px;line-height:1.1;margin:4px 0 2px;font-variant-numeric:tabular-nums;word-break:break-all;color:var(--ink);display:inline-block;background:linear-gradient(transparent 70%,var(--yellow) 70%)}
+.sum .meta{font-size:13.5px;color:#2a3150;margin:0 0 8px}
+.sum dl{margin:12px 0;border-top:1px solid var(--rule)}
+.sum dl div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:14px}
+.sum dt{color:var(--mute)}.sum dd{margin:0;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+.sum .note{font-size:12px;color:var(--mute);line-height:1.5}
+.sum .acts{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+/* results */
+.res-cols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:start}
+table.calc{width:100%;border-collapse:collapse;font-size:14.5px}
+table.calc th,table.calc td{padding:9px 6px;border-bottom:1px solid var(--rule);text-align:left;vertical-align:top}
+table.calc td{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700}
+table.calc th{font-weight:600}
+table.calc th small{display:block;font-size:12px;color:var(--mute);font-weight:500}
+table.calc tr.sec th,table.calc tr.sec td{background:var(--ink);color:#fff;font-weight:800}
+table.calc tr.sec th small{color:#c3cbe3}
+table.calc tr.sec .tag{color:var(--yellow)}
+table.calc tr.sub th{padding-left:20px}
+table.calc tr.tot th,table.calc tr.tot td{font-weight:900;border-top:2px solid var(--ink);background:var(--soft)}
+table.calc tr.final th,table.calc tr.final td{font-size:18px;font-weight:900;border-top:3px solid var(--ink);background:var(--yellow);color:var(--ink)}
+.tag{display:inline-block;font-size:11px;font-weight:800;padding:1px 6px;border:1px solid currentColor;margin-right:6px;border-radius:2px;vertical-align:1px}
+.tag.d{color:var(--ink)}.tag.a{color:var(--green)}.tag.r{color:var(--gold)}
+.bars .bar{margin:10px 0}
+.bars .bl{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:var(--ink)}
+.bars .tr{height:14px;background:var(--soft);margin-top:4px}
+.bars .fi{height:100%;background:#aab4d0}
+.bars .bar.pick .fi{background:var(--ink)}
+.bars .bar.pick .bl::after{content:"✓ 採用";color:var(--ink);background:var(--yellow);padding:0 6px;margin-left:8px;font-size:12px}
+.bars .bl span:first-child{flex:1}
+table.mini{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0 14px}
+table.mini th,table.mini td{padding:6px 6px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums}
+table.mini th:first-child,table.mini td:first-child{text-align:left}
+table.mini thead th{border-bottom:2px solid var(--ink);font-size:12px;color:var(--ink)}
+.callout{font-family:var(--serif);font-size:17px;border-left:4px solid var(--yellow);padding:4px 0 4px 14px;margin:14px 0;color:var(--ink)}
+.scroll{overflow-x:auto}
+.disc{font-size:13.5px;color:#2a3150;border-top:3px solid var(--ink);padding-top:12px;margin-top:22px}
+/* 特色功能：加薪與花紅 */
+.rbform{border:1px solid var(--rule);border-top:3px solid var(--ink);padding:18px 18px 4px;margin:0 0 22px}
+.rbt{width:100%;border-collapse:collapse;font-size:14.5px}
+.rbt th,.rbt td{padding:10px 8px;border-bottom:1px solid var(--rule);text-align:right;font-variant-numeric:tabular-nums;vertical-align:top}
+.rbt th:first-child,.rbt td:first-child{text-align:left}
+.rbt thead th{border-bottom:2px solid var(--ink);font-size:12.5px;color:var(--ink)}
+.rbt tbody th{font-weight:700}
+.rbt td{font-weight:700}
+.rbt td.kept{color:var(--green);font-weight:900}
+.rbt small{display:block;font-size:12px;color:var(--mute);font-weight:500}
+.rbt tr.basis th,.rbt tr.basis td{background:var(--soft);color:var(--mute)}
+.rbcards{display:none}
+.rbcard{border-top:3px solid var(--ink);padding:10px 0 4px;margin:0 0 14px}
+.rbcard strong{font-size:16px;color:var(--ink)}
+.rbcard small{display:block;font-size:12px;color:var(--mute)}
+.rbcard dl{margin:8px 0;display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.rbcard dt{color:var(--mute)}.rbcard dd{margin:0;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.rbcard dd.kept{color:var(--green)}
+.rbx{margin:26px 0 0;border-top:1px solid var(--rule)}
+.rbx h3{margin-top:16px}
+.rbx .ratio{font-weight:800;color:var(--ink);margin:6px 0 2px}
+.rbfaq{margin-top:26px}
+/* footer */
+footer{background:var(--ink);color:#d3d9ec;margin-top:40px;font-size:13.5px;border-top:6px solid var(--yellow)}
+footer .wrap{padding-top:34px;padding-bottom:90px}
+footer .cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px}
+footer h4{color:var(--yellow);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px}
+footer p{margin:0 0 8px;line-height:1.6;color:#c3cbe3}
+footer a{color:#fff}
+footer .copy{border-top:1px solid #243a7a;margin-top:24px;padding-top:14px;color:#8f9bc4;font-size:12px}
+/* mobile bar & toast */
+#mbar{display:none;position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:3px solid var(--ink);padding:8px 16px;z-index:80;justify-content:space-between;align-items:center;gap:10px}
+#mbar b{font-family:var(--serif);font-size:24px;font-weight:900;color:var(--ink)}
+#mbar small{display:block;font-size:11px;color:var(--mute)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;background:var(--ink);color:#fff;padding:10px 16px;font-size:14px;z-index:90;max-width:92vw;border-left:5px solid var(--yellow)}
+@media(max-width:1020px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;order:-1}
+  .hero{grid-template-columns:1fr;gap:20px}
+  .res-cols{grid-template-columns:1fr}
+  #mbar{display:flex}
+  footer .cols{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  .masthead .wrap{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .yearbox{justify-self:center;align-items:center}.mh-left{display:none}
+  .grid2{grid-template-columns:1fr}
+  .logo b{font-size:28px}.bignum{font-size:38px}
+  .topbar .r .hide-s{display:none}
+  .rbt-wrap{display:none}
+  .rbcards{display:block}
+  footer .cols{grid-template-columns:1fr}
+}
+@media print{.topbar,.sections,#mbar,.side,footer .cols{display:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳至主要內容</a>
+
+<div class="topbar"><div class="wrap">
+  <span id="today"></span>
+  <span class="r"><span class="hide-s">規則最後核對：2026年11月20日</span><a class="pill gold" href="#raise">加薪與花紅</a></span>
+</div></div>
+
+<header class="masthead"><div class="wrap">
+  <div class="mh-left">香港 · 稅務專題<br>HONG KONG · TAX DESK</div>
+  <a class="logo" href="#top" id="top" aria-label="香港薪俸稅計算器">
+    <span class="mark"><i>稅</i><b>薪俸稅計算器</b></span>
+    <small>Salaries Tax Calculator · Hong Kong</small>
+  </a>
+  <div class="yearbox">
+    <label for="S-year">課稅年度 <span class="req" title="必填">＊必填</span></label>
+    <select id="S-year" data-root="S" data-p="year" data-re="year" aria-required="true">
+      <option value="2026/27">2026/27（2026年4月至2027年3月）</option>
+      <option value="2025/26">2025/26（2025年4月至2026年3月）</option>
+    </select>
+  </div>
+</div></header>
+
+<nav class="sections" aria-label="頁面章節"><div class="wrap">
+  <a href="#hero">最新規則</a><a href="#income">收入</a><a href="#family">家庭及免稅額</a><a href="#deductions">扣除項目</a><a href="#result">計算結果</a><a href="#raise">加薪與花紅</a>
+</div></nav>
+
+<main id="main" class="wrap">
+  <section class="hero" id="hero">
+    <div>
+      <span class="kicker">稅務 · <span data-ytext="yr"></span> 課稅年度</span>
+      <h1>你的薪俸稅，<br>到底要繳多少？</h1>
+      <p class="deck">按所選課稅年度的稅率、免稅額及扣除上限，同時以累進稅率與標準稅率計算並取較低者；再模擬加薪或花紅後，實際可以多保留多少。</p>
+      <p class="byline"><b>規則更新日期：2026年11月20日</b> · 所有計算在你的瀏覽器內完成，不上傳任何資料</p>
+    </div>
+    <aside aria-label="本年度重點">
+      <ol class="latest" id="latest"></ol>
+    </aside>
+  </section>
+
+  <div class="layout">
+    <div id="form"></div>
+    <aside class="side" aria-label="估算結果摘要"><div class="sum" id="sum"></div></aside>
+  </div>
+
+  <section class="block" id="result" aria-live="polite"></section>
+  <section class="block" id="raise"></section>
+</main>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><h4>關於本工具</h4><p>協助一般僱員估算薪俸稅。首版支援 2025/26 及 2026/27 課稅年度。</p><p>版面風格參考南華早報（SCMP）網站的編輯式設計，本頁與南華早報並無任何關聯。</p></div>
+    <div><h4>暫未支援</h4><p>個人入息課稅、利得稅、物業稅、複雜跨境工作收入、股份獎賞／股票期權及一次性收入攤分、僱主提供住所的應課稅租值，以及已婚人士合併評稅的完整最佳化比較。</p></div>
+    <div><h4>私隱</h4><p>不要求姓名、身份證號碼或地址。收入及子女出生日期只在你的瀏覽器內處理，不會放入網址，也不載入任何分析或廣告服務。</p></div>
+    <div><h4>免責聲明</h4><p>本工具根據你提供的資料及所選課稅年度的稅務規則作估算，僅供參考，不構成稅務、法律或投資建議。最終資格及稅款以稅務局的評定及適用法例為準。</p></div>
+  </div>
+  <div class="copy">© 2026 香港薪俸稅計算器（獨立估算工具）。所有金額以港元 HK$ 顯示。</div>
+</div></footer>
+
+<div id="mbar"><div><small id="mbar-l">估算最終薪俸稅</small><b id="mbar-v">HK$0</b></div><a class="btn sm" href="#result">查看明細</a></div>
+<div id="toast" role="status" hidden=""></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   一、規則設定（按課稅年度集中管理；介面元件不得內置稅務數字）
+   ===================================================================== */
+const IRD='https://www.ird.gov.hk';
+const SRC={ind:IRD+'/chi/tax/ind.htm',allow:IRD+'/chi/tax/ind_all.htm'};
+const BANDS=[[50000,0.02],[50000,0.06],[50000,0.10],[50000,0.14],[Infinity,0.17]];
+const STD={tier:5000000,r1:0.15,r2:0.16};
+const RULES={
+ '2025/26':{y:2025,period:'2025年4月1日至2026年3月31日',newbornYears:1,
+  allow:{basic:132000,married:264000,child:130000,extraChild:130000,sibling:37500,p60:50000,p55:25000,p60live:50000,p55live:25000,single:132000,disabled:75000,disabledDep:75000},
+  cap:{mpf:18000,edu:100000,vhis:8000,tvc:60000,home:100000,homeExtra:120000,elderly:100000,fertility:100000},
+  relief:{status:'gazetted',pct:1,cap:3000}},
+ '2026/27':{y:2026,period:'2026年4月1日至2027年3月31日',newbornYears:2,
+  allow:{basic:145000,married:290000,child:140000,extraChild:140000,sibling:37500,p60:55000,p55:27500,p60live:55000,p55live:27500,single:145000,disabled:75000,disabledDep:75000},
+  cap:{mpf:18000,edu:100000,vhis:8000,tvc:60000,home:100000,homeExtra:120000,elderly:110000,fertility:100000},
+  relief:{status:'unannounced'}}
+};
+function highlights(k){
+  const R=RULES[k],A=R.allow,C=R.cap;
+  const L=[['免稅額','基本免稅額 '+HK(A.basic)+'；已婚人士免稅額 '+HK(A.married)],['子女','子女免稅額及初生子女額外免稅額各 '+HK(A.child)+(R.newbornYears===2?'；額外免稅額申索期延長至出生後首兩年':'')],['供養','供養父母／祖父母免稅額 '+HK(A.p60)+'／'+HK(A.p55)],['扣除','長者住宿照顧開支每名上限 '+HK(C.elderly)]];
+  L.push(R.relief.status==='gazetted'?['寬減','一次性稅款寬減 100%，上限 '+HK(R.relief.cap)]:['寬減','年度稅款寬減：尚未公布，估算不計入']);
+  if(k==='2026/27')L.push(['建議中 · 未計入','《施政報告》建議的 HK$160,000 子女免稅額尚未確認生效，不納入計算']);
+  return L;
+}
+
+/* =====================================================================
+   二、工具函數
+   ===================================================================== */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2=x=>Math.round((x+Number.EPSILON)*100)/100,r6=x=>Math.round(x*1e6)/1e6;
+function HK(x){return 'HK$'+r2(x).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2})}
+const HKs=x=>x<0?'−'+HK(-x):HK(x);
+const pct=x=>(Math.round(x*100)/100)+'%';
+const sum=a=>a.reduce((s,x)=>s+x,0);
+const getP=(o,p)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
+const setP=(o,p,v)=>{const k=p.split('.'),l=k.pop();k.reduce((a,x)=>a[x],o)[l]=v};
+const idOf=(root,p)=>root+'-'+p.replace(/\./g,'-');
+function pd(s){if(!s)return null;const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);if(!m)return null;const y=+m[1];if(y<1900||y>2100)return null;return Date.UTC(y,+m[2]-1,+m[3])}
+function addY(t,n){const d=new Date(t);return Date.UTC(d.getUTCFullYear()+n,d.getUTCMonth(),d.getUTCDate())}
+function ageAt(b,t){let a=0;while(addY(b,a+1)<=t)a++;return a}
+let errs={};
+function parseAmt(v){
+  if(v===''||v==null)return{v:0};
+  const t=String(v).replace(/[,\s，]/g,'').replace(/^HK\$/i,'');
+  if(!/^-?\d*\.?\d+$/.test(t))return{v:0,err:'請輸入數字（例如 120000），毋須加入文字或符號。'};
+  const x=Number(t);if(x<0)return{v:0,err:'金額不可為負數。'};if(x>1e10)return{v:0,err:'金額過大，請檢查輸入。'};
+  return{v:x};
+}
+function Amt(key,raw){const p=parseAmt(raw);if(p.err)errs[key]=p.err;return p.v}
+function Int(key,raw,max){const p=parseAmt(raw);if(p.err){errs[key]=p.err;return 0}if(!Number.isInteger(p.v)){errs[key]='請輸入整數。';return 0}if(p.v>max){errs[key]='數目過大，請檢查輸入（上限 '+max+'）。';return 0}return p.v}
+
+/* =====================================================================
+   三、共用計算引擎（基本計算與加薪／花紅分析使用同一套）
+   ===================================================================== */
+function assessChild(c,R){
+  const yS=Date.UTC(R.y,3,1),yE=Date.UTC(R.y+1,2,31);
+  if(!c.dob)return{st:'incomplete',reason:'請輸入出生日期。'};
+  const b=pd(c.dob);if(b===null)return{st:'incomplete',reason:'出生日期格式不正確。'};
+  if(b>yE)return{st:'no',reason:'出生日期在該課稅年度結束之後，不適用於此年度。'};
+  if(!c.unmarried)return{st:'no',reason:'子女須未婚。'};
+  if(c.claimed==='yes')return{st:'no',reason:'已由配偶或其他人申索，不可重複申索。'};
+  let why='';
+  if(addY(b,18)>yS)why='年內未滿 18 歲';
+  else if(c.disabled)why='已滿 18 歲，因身體或精神問題無能力工作';
+  else if(c.fte&&addY(b,25)>yS)why='18 歲或以上、未滿 25 歲並接受全日制教育';
+  else return{st:'no',reason:'已滿 18 歲，但未符合「未滿 25 歲並接受全日制教育」或「無能力工作」的條件。'};
+  if(c.claimed!=='no')return{st:'pending',reason:'請確認此子女是否已由配偶或其他人申索。'};
+  return{st:'ok',why,newborn:b>=addY(yS,1-R.newbornYears),dobT:b};
+}
+function assessParent(p,R){
+  if(p.mode==='none')return{st:'skip',reason:'已選擇不申索。'};
+  const yE=Date.UTC(R.y+1,2,31),b=pd(p.dob);
+  if(!b&&!p.disab)return{st:'incomplete',reason:'請輸入出生日期，或勾選「符合政府傷殘津貼資格」。'};
+  if(b&&b>yE)return{st:'no',reason:'出生日期在課稅年度結束之後。'};
+  let band;
+  if(p.disab)band='high';
+  else{const age=ageAt(b,yE);if(age>=60)band='high';else if(age>=55)band='low';else return{st:'no',reason:'該親屬在課稅年度結束時為 '+age+' 歲，未達 55 歲，且未符合傷殘津貼資格。'}}
+  if(p.claimed==='yes')return{st:'no',reason:'已由其他人就同一親屬申索，不可重複申索。'};
+  if(p.mode==='allowance'){
+    if(p.hk==='no')return{st:'no',reason:'該親屬須通常居住於香港。'};
+    if(p.supported==='no')return{st:'no',reason:'你須在年內供養該親屬。'};
+  }
+  if(p.claimed!=='no')return{st:'pending',reason:'請確認是否已由其他人就同一親屬申索。'};
+  if(p.mode==='allowance'&&(p.hk!=='yes'||p.supported!=='yes'))return{st:'pending',reason:'請確認該親屬通常居於香港，以及你在年內有供養該親屬。'};
+  return{st:'ok',band};
+}
+function progressive(taxable){
+  let rem=taxable,from=0,tax=0;const rows=[];
+  for(const[size,rate]of BANDS){
+    const amt=Math.max(0,Math.min(rem,size));
+    rows.push({from,to:size===Infinity?null:from+size,rate,amt,tax:r6(amt*rate)});
+    tax+=amt*rate;rem-=amt;if(size!==Infinity)from+=size;
+  }
+  return{tax:r6(tax),rows};
+}
+function calc(B){
+  const R=RULES[B.year],A=R.allow,C=R.cap,notes=[];
+  const assessable=B.salary+B.bonus;
+  /* 子女 */
+  const kids=B.children.map(c=>assessChild(c,R));
+  kids.map((k,i)=>({k,i})).filter(o=>o.k.st==='ok').sort((a,b)=>(!!b.k.newborn-!!a.k.newborn)||a.i-b.i)
+    .forEach((o,r)=>{if(r>=9){o.k.st='no';o.k.reason='子女免稅額只適用於首 9 名子女。'}});
+  const okKids=kids.filter(k=>k.st==='ok'),nChild=okKids.length,nNew=okKids.filter(k=>k.newborn).length;
+  const qualKid=kids.some(k=>k.st==='ok'&&k.dobT>=Date.UTC(2023,9,25));
+  /* 供養親屬 */
+  const pars=B.parents.map(p=>{
+    const a=assessParent(p,R);
+    if(a.st==='ok'){
+      if(p.mode==='allowance'){a.amt=a.band==='high'?A.p60:A.p55;a.live=p.livesWith?(a.band==='high'?A.p60live:A.p55live):0}
+      else if(p.mode==='care'){a.care=Math.min(p.careAmt,C.elderly)}
+    }
+    return a;
+  });
+  /* 免稅額 */
+  const al=[],push=(label,amt,note)=>{if(amt>0)al.push({label,amt,note:note||''})};
+  let married=false;
+  if(B.marital==='married'){
+    if(B.spouseIncome==='no')married=true;
+    else if(B.spouseIncome==='yes')notes.push({lvl:'warn',text:'配偶有應課薪俸稅收入：分開評稅下不可申索已婚人士免稅額，已按基本免稅額計算。已婚人士合併評稅的最佳化比較，本工具暫未支援。'});
+    else notes.push({lvl:'warn',text:'請確認配偶是否有應課薪俸稅收入。在資料確認前，暫按基本免稅額計算（未計入已婚人士免稅額）。'});
+  }
+  if(married)push('已婚人士免稅額',A.married,'取代基本免稅額，兩者不可相加');else push('基本免稅額',A.basic);
+  if(B.singleParent){
+    if(B.marital==='married')notes.push({lvl:'warn',text:'你已選擇已婚，單親免稅額未計入。'});
+    else if(nChild===0)notes.push({lvl:'warn',text:'單親免稅額須有合資格子女，目前沒有符合資格的子女，故未計入。'});
+    else push('單親免稅額',A.single,'須符合照顧及婚姻狀況要求');
+  }
+  if(B.disabledSelf)push('傷殘人士免稅額',A.disabled);
+  if(B.disabledDeps>0)push('傷殘受養人免稅額（'+B.disabledDeps+' 名）',A.disabledDep*B.disabledDeps);
+  if(nChild>0)push('子女免稅額（'+nChild+' 名）',A.child*nChild);
+  if(nNew>0)push('初生子女額外免稅額（'+nNew+' 名）',A.extraChild*nNew,'按出生日期判斷');
+  if(B.siblings>0)push('供養兄弟姊妹免稅額（'+B.siblings+' 名）',A.sibling*B.siblings);
+  pars.forEach((a,i)=>{if(a.st==='ok'&&B.parents[i].mode==='allowance'){push('供養父母／祖父母免稅額（親屬 '+(i+1)+'）',a.amt);push('額外同住免稅額（親屬 '+(i+1)+'）',a.live)}});
+  const totalAllow=sum(al.map(x=>x.amt));
+  /* 扣除項目 */
+  const de=[],addD=(key,label,actual,amount,cap,note)=>{if(actual>0||amount>0)de.push({key,label,actual,amount,cap,note:note||''})};
+  addD('mpf','強積金強制性供款／合資格退休計劃供款（僱員）',B.mpf,Math.min(B.mpf,C.mpf),HK(C.mpf),B.mpf>C.mpf?'已按上限計算':'');
+  addD('edu','個人進修開支',B.edu,Math.min(B.edu,C.edu),HK(C.edu),B.edu>C.edu?'已按上限計算':'');
+  const vh=B.vhis.map(v=>Math.min(v,C.vhis));
+  addD('vhis','自願醫保合資格保費（'+B.vhis.filter(v=>v>0).length+' 名受保人）',sum(B.vhis),sum(vh),HK(C.vhis)+'／人',sum(B.vhis)>sum(vh)?'已按每人上限計算':'');
+  const tv=B.tvc+B.annuity;
+  addD('tvc','可扣稅強積金自願性供款＋合資格延期年金保費',tv,Math.min(tv,C.tvc),HK(C.tvc)+'（兩者合計）',tv>C.tvc?'兩者合計已按上限計算':'');
+  const hasExtra=B.extraCap&&qualKid,homeCap=hasExtra?C.homeExtra:C.home;
+  if(B.extraCap&&!qualKid)notes.push({lvl:'info',text:'你勾選了額外扣除上限，但輸入資料中沒有 2023 年 10 月 25 日或之後出生的合資格子女，故按一般上限 '+HK(C.home)+' 計算。'});
+  let hli=0,rent=0;
+  if(B.hli>0){if(B.hliYear>=1&&B.hliYear<=20)hli=Math.min(B.hli,homeCap);else notes.push({lvl:'warn',text:'居所貸款利息扣除最多可申索 20 個課稅年度，你輸入的申索年度數目不在 1–20 內，故未計入。'})}
+  if(B.rent>0)rent=Math.min(B.rent,homeCap);
+  let hNote='',rNote='';
+  if(hli>0&&rent>0){
+    notes.push({lvl:'warn',text:'居所貸款利息與住宅租金一般不可於同一課稅年度同時申索（特定情況除外）。系統暫只採用扣除額較高的一項，請核對你的情況。'});
+    if(hli>=rent){rent=0;rNote='與居所貸款利息互斥，未計入'}else{hli=0;hNote='與住宅租金互斥，未計入'}
+  }
+  addD('hli','居所貸款利息',B.hli,hli,HK(homeCap),hNote);
+  addD('rent','住宅租金',B.rent,rent,HK(homeCap),rNote);
+  const care=sum(pars.map((a,i)=>a.st==='ok'&&B.parents[i].mode==='care'?a.care:0)),careA=sum(pars.map((a,i)=>a.st==='ok'&&B.parents[i].mode==='care'?B.parents[i].careAmt:0));
+  addD('care','長者住宿照顧開支',careA,care,HK(C.elderly)+'／每名受養人','不可與同一親屬的供養免稅額並用');
+  const fcap=B.marital==='married'?Math.max(0,C.fertility-B.spouseFert):C.fertility,fert=Math.min(B.fertility,fcap);
+  addD('fert','輔助生育服務開支',B.fertility,fert,HK(fcap)+(B.marital==='married'?'（已扣除配偶已申索金額）':''),'');
+  let don=0,donNote='';
+  const base=Math.max(0,assessable-B.workExp);
+  if(B.donation>0){
+    if(B.donation<100)donNote='認可慈善捐款合計須至少 HK$100，才可扣除';
+    else{don=Math.min(B.donation,0.35*base);if(B.donation>don)donNote='已按指定基數（'+HK(base)+'）的 35% 封頂'}
+  }
+  addD('don','認可慈善捐款',B.donation,don,'指定基數 35%',donNote);
+  addD('work','與工作有關的支出',B.workExp,B.workExp,'須符合嚴格法定條件','');
+  const totalDed=sum(de.map(x=>x.amount));
+  const net=Math.max(0,assessable-totalDed);
+  const taxable=Math.max(0,net-totalAllow);
+  const prog=progressive(taxable);
+  const stdTax=r6(STD.r1*Math.min(net,STD.tier)+STD.r2*Math.max(0,net-STD.tier));
+  const chosen=Math.abs(prog.tax-stdTax)<1e-6?'equal':(prog.tax<stdTax?'progressive':'standard');
+  const preRelief=Math.min(prog.tax,stdTax);
+  let relief=0;const rs=R.relief.status;
+  if(rs==='gazetted')relief=Math.min(preRelief*R.relief.pct,R.relief.cap);
+  const final=Math.max(0,r6(preRelief-relief));
+  return{R,assessable,kids,pars,al,totalAllow,de,totalDed,net,taxable,bands:prog.rows,progressive:prog.tax,standard:stdTax,chosen,preRelief,relief,reliefStatus:rs,final,
+    effRate:assessable>0?final/assessable:null,notes,nChild,nNew,qualKid,donBase:base};
+}
+
+/* ---- 加薪與花紅：純函數（不改動原本輸入；每個情境都以完整引擎重算） ---- */
+function rbExtraIncome(type,v){
+  if(type==='monthly'){
+    const n=v.months;
+    if(!Number.isInteger(n)||n<1||n>12)throw new Error('適用月數必須是 1 至 12 的整數。');
+    return Math.max(0,v.monthly)*n;
+  }
+  return Math.max(0,v.amount);
+}
+function rbCompute(B,s){
+  const o=JSON.parse(JSON.stringify(B));
+  o.bonus+=s.extra;                       /* 新增收入加入本年度應評稅入息 */
+  if(s.mpf!=null)o.mpf=s.mpf;             /* 可選：模擬情境下的全年強積金強制性供款（上限由引擎處理） */
+  return calc(o);
+}
+function rbSummary(base,scn,extra){
+  const extraTax=r6(scn.final-base.final);
+  return{extra,extraTax,kept:r6(extra-extraTax),ratio:extra>0?extraTax/extra*100:null};   /* 新增收入為零時不計算比例 */
+}
+function rbBandsTouched(base,scn){return scn.bands.filter((b,i)=>b.amt-base.bands[i].amt>0.005).length}
+function rbExplain(base,sc,sm){
+  const L=[];
+  if(base.final<=0.005&&sc.final>0.005)L.push(base.reliefStatus==='gazetted'?'原本的免稅額及寬減令最終稅款為零。增加收入後，部分收入開始產生稅款。':'原本的免稅額令稅款為零。增加收入後，部分收入開始產生稅款。');
+  else if(base.final<=0.005&&sc.final<=0.005&&sm.extra>0)L.push('原本及模擬情境的最終稅款均為零，這筆新增收入暫時不需要額外繳稅。');
+  if(sc.chosen!=='standard'&&rbBandsTouched(base,sc)>=2)L.push('這筆新增收入涉及不同稅階，因此不是整筆收入都按同一稅率計算。');
+  if(base.chosen!==sc.chosen&&base.chosen!=='equal'&&sc.chosen!=='equal')
+    L.push(sc.chosen==='standard'?'在此情境下，標準稅率計算的結果較低，系統已改用該方式估算。':'在此情境下，累進稅率計算的結果較低，系統已改用該方式估算。');
+  const bd=base.de.find(d=>d.key==='don');
+  if(bd&&bd.actual>0&&Math.abs(sc.donBase-base.donBase)>0.005)L.push('認可慈善捐款的扣除上限（指定基數的 35%）已按新收入重新計算。');
+  return L;
+}
+
+/* =====================================================================
+   四、狀態
+   ===================================================================== */
+const newChild=()=>({dob:'',unmarried:true,fte:false,disabled:false,claimed:'no'});
+const newParent=()=>({dob:'',disab:false,hk:'',supported:'',livesWith:false,claimed:'no',mode:'allowance',careAmt:''});
+const freshS=()=>({year:'2026/27',salary:'',bonus:'',mpf:'',mpfEst:false,monthly:'',months:'12',uns:{quarters:false,overseas:false,shares:false,lump:false},
+  marital:'single',spouseIncome:'',singleParent:false,disabledSelf:false,disabledDeps:'',siblings:'',children:[],parents:[],
+  edu:'',vhis:[],tvc:'',annuity:'',hli:'',hliYear:'1',rent:'',extraCap:false,fertility:'',spouseFert:'',donation:'',workExp:''});
+const freshX=()=>({type:'monthly',monthly:'',months:'12',amount:'',mpf:''});
+const ROOT={S:freshS(),X:freshX()};
+let S=ROOT.S,RB=[],rbid=0;
+
+function toInput(){
+  const o={year:S.year};
+  o.salary=Amt('S.salary',S.salary);o.bonus=Amt('S.bonus',S.bonus);o.mpf=Amt('S.mpf',S.mpf);
+  o.marital=S.marital;o.spouseIncome=S.spouseIncome;o.singleParent=S.singleParent;o.disabledSelf=S.disabledSelf;
+  o.disabledDeps=Int('S.disabledDeps',S.disabledDeps,20);o.siblings=Int('S.siblings',S.siblings,20);
+  o.children=S.children.map(c=>({...c}));
+  o.parents=S.parents.map((p,i)=>({...p,careAmt:Amt('S.parents.'+i+'.careAmt',p.careAmt)}));
+  o.edu=Amt('S.edu',S.edu);o.vhis=S.vhis.map((v,i)=>Amt('S.vhis.'+i+'.premium',v.premium));
+  o.tvc=Amt('S.tvc',S.tvc);o.annuity=Amt('S.annuity',S.annuity);o.hli=Amt('S.hli',S.hli);
+  o.hliYear=S.hliYear===''?1:Int('S.hliYear',S.hliYear,100);o.rent=Amt('S.rent',S.rent);o.extraCap=S.extraCap;
+  o.fertility=Amt('S.fertility',S.fertility);o.spouseFert=Amt('S.spouseFert',S.spouseFert);
+  o.donation=Amt('S.donation',S.donation);o.workExp=Amt('S.workExp',S.workExp);
+  return o;
+}
+
+/* =====================================================================
+   五、表單元件
+   ===================================================================== */
+const amtSpan=k=>'<span data-amt="'+k+'"></span>';
+const at=(root,p,extra)=>'data-root="'+root+'" data-p="'+p+'" '+(extra||'');
+function fMoney(root,p,label,hint,o){o=o||{};const id=idOf(root,p),v=getP(ROOT[root],p);
+  return '<div class="field"'+(o.showif?' data-showif="'+o.showif+'"':'')+'><label for="'+id+'">'+label+(o.req?' <span class="req" title="必填">＊</span>':'')+'</label><div class="money"><span aria-hidden="true">HK$</span><input id="'+id+'" type="text" inputmode="decimal" autocomplete="off" placeholder="0" '+at(root,p,'data-kind="money"')+' value="'+esc(v)+'" aria-describedby="'+id+'-e"></div>'+(hint?'<p class="hint">'+hint+'</p>':'')+'<p class="err" id="'+id+'-e" data-err="'+root+'.'+p+'" role="alert"></p></div>'}
+function fInt(root,p,label,hint,o){o=o||{};const id=idOf(root,p),v=getP(ROOT[root],p);
+  return '<div class="field"'+(o.showif?' data-showif="'+o.showif+'"':'')+'><label for="'+id+'">'+label+'</label><input class="num" id="'+id+'" type="text" inputmode="numeric" autocomplete="off" placeholder="0" '+at(root,p,'data-kind="int"')+' value="'+esc(v)+'" aria-describedby="'+id+'-e">'+(hint?'<p class="hint">'+hint+'</p>':'')+'<p class="err" id="'+id+'-e" data-err="'+root+'.'+p+'" role="alert"></p></div>'}
+function fDate(root,p,label,hint){const id=idOf(root,p),v=getP(ROOT[root],p);
+  return '<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" type="date" min="1900-01-01" max="2100-12-31" '+at(root,p)+' value="'+esc(v)+'">'+(hint?'<p class="hint">'+hint+'</p>':'')+'</div>'}
+function fCheck(root,p,label,hint,o){o=o||{};const id=idOf(root,p),v=getP(ROOT[root],p);
+  return '<div class="field chk"'+(o.showif?' data-showif="'+o.showif+'"':'')+'><label><input type="checkbox" id="'+id+'" '+at(root,p)+(v?' checked':'')+'><span>'+label+'</span></label>'+(hint?'<p class="hint" style="margin-left:28px">'+hint+'</p>':'')+'</div>'}
+const TRI=[['yes','是'],['no','否'],['unknown','不知道']];
+function fTri(root,p,label,hint,opts,o){o=o||{};opts=opts||TRI;const name=idOf(root,p),v=getP(ROOT[root],p);
+  return '<fieldset class="field"'+(o.showif?' data-showif="'+o.showif+'"':'')+'><legend'+(o.q?' data-q="'+o.q+'"':'')+'>'+label+'</legend><div class="seg">'+opts.map(([val,t])=>'<label><input type="radio" name="'+name+'" value="'+val+'" '+at(root,p,o.re?'data-re="'+o.re+'"':'')+(String(v)===val?' checked':'')+'><span>'+t+'</span></label>').join('')+'</div>'+(hint?'<p class="hint">'+hint+'</p>':'')+'</fieldset>'}
+function fSelect(root,p,label,opts,re){const id=idOf(root,p),v=getP(ROOT[root],p);
+  return '<div class="field"><label for="'+id+'">'+label+'</label><select id="'+id+'" '+at(root,p,re?'data-re="'+re+'"':'')+'>'+opts.map(([a,b])=>'<option value="'+a+'"'+(v===a?' selected':'')+'>'+b+'</option>').join('')+'</select></div>'}
+
+function childRow(root,base,i,showHead){
+  return (showHead?'<div class="rowhead"><strong>子女 '+(i+1)+'</strong><button type="button" class="link danger" data-act="del" data-list="children" data-i="'+i+'">移除</button></div>':'')+
+   fDate(root,base+'.dob','出生日期（必填）','用作判斷年齡、是否符合初生子女額外免稅額。')+
+   fCheck(root,base+'.unmarried','此子女未婚')+
+   fCheck(root,base+'.fte','年內接受全日制教育','18 歲或以上、未滿 25 歲時適用。')+
+   fCheck(root,base+'.disabled','已滿 18 歲，因身體或精神問題無能力工作')+
+   fTri(root,base+'.claimed','此子女的免稅額是否已由配偶或其他人申索？','夫婦的子女免稅額一般須由其中一方整體申索。不確定請選「不知道」。',[['no','否'],['yes','是'],['unknown','不知道']]);
+}
+function parentRow(i){
+  const p=S.parents[i],b='parents.'+i;
+  return '<div class="rowcard" data-row="'+b+'"><div class="rowhead"><strong>親屬 '+(i+1)+'</strong><button type="button" class="link danger" data-act="del" data-list="parents" data-i="'+i+'">移除</button></div>'+
+   fSelect('S',b+'.mode','你對此親屬的申索方式',[['allowance','供養父母／祖父母免稅額'],['care','長者住宿照顧開支（扣除）'],['none','暫不申索']],'list:parents')+
+   fDate('S',b+'.dob','親屬出生日期','用作判斷 55–59 歲或 60 歲或以上（按課稅年度結束時計算）。')+
+   fCheck('S',b+'.disab','該親屬符合政府傷殘津貼資格')+
+   (p.mode==='allowance'?fTri('S',b+'.hk','該親屬通常居於香港？')+fTri('S',b+'.supported','你在年內有供養該親屬？')+fCheck('S',b+'.livesWith','全年連續與你同住','符合者可另獲額外同住免稅額。'):'')+
+   (p.mode==='care'?fMoney('S',b+'.careAmt','年內已支付的長者住宿照顧開支','每名受養人上限 '+amtSpan('cap.elderly')+'；同一親屬不可同時申索供養免稅額。'):'')+
+   fTri('S',b+'.claimed','是否已由其他人（如兄弟姊妹）就同一親屬申索？',null,[['no','否'],['yes','是'],['unknown','不知道']])+
+   '<p class="rowstatus" data-status="parents.'+i+'"></p></div>';
+}
+function renderList(name){
+  const el=$('#list-'+name);if(!el)return;
+  if(name==='children')el.innerHTML=S.children.length?S.children.map((c,i)=>'<div class="rowcard">'+childRow('S','children.'+i,i,true)+'<p class="rowstatus" data-status="children.'+i+'"></p></div>').join(''):'<p class="empty">尚未加入子女。如有子女，請按「新增子女」並輸入出生日期。</p>';
+  if(name==='parents')el.innerHTML=S.parents.length?S.parents.map((p,i)=>parentRow(i)).join(''):'<p class="empty">尚未加入供養親屬。</p>';
+  if(name==='vhis')el.innerHTML=S.vhis.length?S.vhis.map((v,i)=>'<div class="rowcard"><div class="rowhead"><strong>受保人 '+(i+1)+'</strong><button type="button" class="link danger" data-act="del" data-list="vhis" data-i="'+i+'">移除</button></div>'+fMoney('S','vhis.'+i+'.premium','全年已繳的合資格保費','每名受保人上限 '+amtSpan('cap.vhis')+'。僱主繳付或已獲報銷的部分不可計入。')+'</div>').join(''):'<p class="empty">尚未加入受保人。</p>';
+  updateAmt();
+}
+function buildForm(){
+  $('#form').innerHTML=
+  '<section class="block" id="income"><span class="kicker">第 1 步</span><h2>收入及基本資料</h2><p class="lead">首版請輸入全年應評稅僱傭收入。計算在你輸入時即時更新。</p>'+
+   '<div class="banner info"><strong>溫馨提示</strong>如涉及僱主提供住所、海外工作、股份獎賞或其他複雜收入，請先核對應評稅收入。本工具暫未完整處理這些情況。</div>'+
+   '<div class="grid2">'+fMoney('S','salary','全年應課稅薪金','請填年度內全年應評稅的薪金總額。',{req:true})+fMoney('S','bonus','花紅、佣金及其他應課稅僱傭收入','避免漏計：花紅、佣金、津貼等請另行加入。')+'</div>'+
+   '<details class="fold"><summary>輔助輸入：月薪 × 工作月數</summary><div class="grid2" style="margin-top:12px">'+fMoney('S','monthly','每月薪金')+fInt('S','months','工作月數','可輸入 0–12。')+'</div><button type="button" class="btn ghost sm" data-act="applyMonthly">套用至「全年應課稅薪金」</button> <button type="button" class="btn ghost sm" data-act="estMpf">按月薪估算強積金強制性供款</button><p class="hint">此功能只計月薪；花紅及其他收入請在上方另行輸入。強積金估算按僱員 5%、每月上限 HK$1,500、月薪低於 HK$7,100 免供款計算，僅為估算。</p></details>'+
+   fMoney('S','mpf','僱員強積金強制性供款（實際年度供款額）','每年上限 '+amtSpan('cap.mpf')+'。僱主供款不可計入。')+'<p class="hint" id="mpfEst" hidden style="margin-top:-10px;color:var(--amber);font-weight:700">⚠ 此數字為估算。正式計算請以你的實際年度供款額為準。</p>'+
+   '<fieldset class="field"><legend>以下情況適用於你嗎？（勾選後結果會標示為未完整處理）</legend>'+
+    fCheck('S','uns.quarters','僱主提供住所（應課稅租值）')+fCheck('S','uns.overseas','有海外工作或跨境工作收入')+fCheck('S','uns.shares','有股份獎賞、股票期權')+fCheck('S','uns.lump','有一次性收入（如遣散費、補發薪金）需要攤分')+'</fieldset>'+
+   fTri('S','marital','婚姻狀況',null,[['single','未婚'],['married','已婚'],['other','離婚／分居／喪偶']],{re:'vis'})+
+   fTri('S','spouseIncome','配偶是否有應課薪俸稅收入？','已婚不代表分開評稅下必然符合已婚人士免稅額。若配偶沒有應課薪俸稅收入，才按已婚人士免稅額計算。',[['no','沒有'],['yes','有'],['unknown','不知道']],{showif:'marital=married'})+
+  '</section>'+
+  '<section class="block" id="family"><span class="kicker">第 2 步</span><h2>家庭及個人免稅額</h2><p class="lead">免稅額用來減少應課稅入息實額，並非直接從稅款中扣減；<b>只用於累進稅率計算</b>，不用於標準稅率。基本免稅額與已婚人士免稅額不可同時累加。</p>'+
+   fCheck('S','singleParent','我是單親，並為子女的唯一或主要照顧者（申索單親免稅額）','單親免稅額有獨立的照顧及婚姻狀況要求，不會因離婚或未婚而自動給予。須有至少一名合資格子女。',{showif:'marital!=married'})+
+   '<div class="grid2">'+fCheck('S','disabledSelf','我本人符合傷殘人士免稅額資格','例如符合政府傷殘津貼資格。')+fInt('S','disabledDeps','傷殘受養人數目','每名 '+amtSpan('allow.disabledDep')+'；請先核對條件。')+'</div>'+
+   fInt('S','siblings','供養兄弟姊妹人數','每名 '+amtSpan('allow.sibling')+'。須符合年齡／教育／傷殘、供養及通常居於香港等條件，且未由他人申索。')+
+   '<h3>子女資料 <small style="font-weight:500;color:var(--mute);font-size:13px">子女免稅額 '+amtSpan('allow.child')+'／名；初生子女額外 '+amtSpan('allow.extraChild')+'（<span data-ytext="newborn"></span>）</small></h3><div id="list-children"></div><button type="button" class="btn ghost sm" data-act="add" data-list="children">＋ 新增子女</button>'+
+   '<h3>供養父母／祖父母／外祖父母</h3><div id="list-parents"></div><button type="button" class="btn ghost sm" data-act="add" data-list="parents">＋ 新增親屬</button>'+
+  '</section>'+
+  '<section class="block" id="deductions"><span class="kicker">第 3 步</span><h2>可扣除項目</h2><p class="lead">請輸入你實際的合資格支出，系統會自動套用上限，不會因為勾選而直接給予最高金額。扣除前請確認未獲報銷，也未被配偶或他人重複申索。</p>'+
+   '<div class="grid2">'+fMoney('S','edu','個人進修開支','上限 '+amtSpan('cap.edu')+'。須為合資格課程並與現職相關。')+
+   fMoney('S','donation','認可慈善捐款','合計須至少 HK$100；上限為指定基數（入息扣除工作支出後）的 35%。')+
+   fMoney('S','tvc','可扣稅強積金自願性供款','與延期年金保費<b>合計</b>上限 '+amtSpan('cap.tvc')+'。一般自願性供款不等於可扣稅自願性供款。')+
+   fMoney('S','annuity','合資格延期年金保費','與上項共用同一上限，不能各自享有。')+
+   fMoney('S','hli','居所貸款利息（實際已付）','一般上限 '+amtSpan('cap.home')+'；符合額外條件上限 '+amtSpan('cap.homeExtra')+'。')+
+   fInt('S','hliYear','本年度是第幾個申索年度？','居所貸款利息最多可申索 20 個課稅年度。')+
+   fMoney('S','rent','住宅租金（實際已付）','一般上限 '+amtSpan('cap.home')+'；須有租約及實際付款，且不屬排除情況。')+
+   fMoney('S','fertility','輔助生育服務開支','上限 '+amtSpan('cap.fertility')+'；已婚夫婦合計上限，不能各自扣除。')+
+   fMoney('S','spouseFert','配偶已申索的輔助生育服務開支','只用於計算夫婦合計上限。',{showif:'marital=married'})+
+   fMoney('S','workExp','與工作有關的支出','須符合嚴格的法定扣除條件，一般僱員很少適用。')+'</div>'+
+   fCheck('S','extraCap','我（或配偶）符合額外扣除上限條件：與 2023 年 10 月 25 日或之後出生的合資格子女同住等','這只是提高<b>上限</b>至 '+'HK$120,000，並非額外多扣 HK$20,000。若實際支出只有 HK$80,000，提高上限不會增加扣除額。系統同時會核對你是否輸入了該子女。')+
+   '<h3>自願醫保（VHIS）合資格保費</h3><div id="list-vhis"></div><button type="button" class="btn ghost sm" data-act="add" data-list="vhis">＋ 新增受保人</button>'+
+   '<div style="margin-top:26px;display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-act="sample">載入範例（全年薪金 600,000／強積金 18,000）</button><button type="button" class="btn ghost sm" data-act="reset">清除所有資料</button></div>'+
+  '</section>';
+  ['children','parents','vhis'].forEach(renderList);
+}
+
+/* =====================================================================
+   六、特色功能：加薪與花紅——稅後增收分析
+   ===================================================================== */
+const RBN={monthly:'每月加薪情境',bonus:'花紅情境',other:'自訂情境'};
+function rbNames(){const c={};return RB.map(s=>{c[s.type]=(c[s.type]||0)+1;return RBN[s.type]+(c[s.type]>1?' '+c[s.type]:'')})}
+function renderRaiseShell(){
+  $('#raise').innerHTML=
+   '<span class="kicker">特色功能</span><h2>加薪與花紅：稅後增收分析</h2><p class="lead">多賺一筆錢，實際可以多保留多少？比較不同收入情境的稅務影響。</p>'+
+   '<div class="banner info"><strong>如何運作</strong>以上方已輸入的資料作為「原本情境」，加入新增收入後，以完整計算引擎重新計算同一課稅年度的薪俸稅，再比較兩者差異。婚姻狀況、子女、供養親屬及已輸入的扣除項目直接沿用，毋須重新填寫；模擬不會改動你上方輸入的任何資料。最多可同時保留三個情境作比較。</div>'+
+   '<div class="rbform">'+
+    fSelect('X','type','收入類型',[['monthly','每月加薪'],['bonus','一次性花紅'],['other','額外佣金或其他僱傭收入']],'vis')+
+    '<div id="rb-f-monthly"><div class="grid2">'+fMoney('X','monthly','每月增加金額')+fInt('X','months','本課稅年度內適用的月數（1–12）')+'</div>'+
+     '<p class="hint" style="margin:-6px 0 6px">請只計入所選課稅年度內適用的收入。如加薪只在年度最後三個月生效，請輸入三個月，而非全年十二個月。</p><p class="hint" id="rb-prev" style="margin:0 0 14px;font-weight:700;color:var(--ink)"></p></div>'+
+    '<div id="rb-f-amount" hidden>'+fMoney('X','amount','本年度新增的應課稅金額','只輸入本年度新增、屬一般應課薪俸稅的僱傭收入。')+'</div>'+
+    fMoney('X','mpf','模擬情境下的全年強積金強制性供款（可選）','留空表示沿用上方輸入（目前：<span id="rb-mpf-now"></span>）。<b>計算假設：</b>首版預設強積金強制性供款維持不變，因為加薪或花紅未必令供款按相同比例增加（供款受每月上限等規則影響）。只有你知道調整後的實際年度供款時才需修改，系統會再套用扣除上限。')+
+    '<p class="hint" style="margin:0 0 14px">本功能只處理一般應課薪俸稅的僱傭收入，不包括自僱收入、投資收益或其他不同稅務性質的收入。</p>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button type="button" class="btn red" data-act="rbAdd">模擬增加收入</button><button type="button" class="btn ghost" data-act="rbClear">清除所有情境</button></div>'+
+    '<p class="err" id="rb-err" role="alert"></p>'+
+   '</div>'+
+   '<div id="rb-out" aria-live="polite"></div>'+
+   '<details class="fold rbfaq"><summary>加薪後跨入較高稅階，會不會令全部收入都被徵收較高稅率？</summary><p style="margin:8px 0 0">不會。累進稅率只對各稅階內的收入部分收取相應稅率，不會因跨越某個稅階而把全部收入一律改按較高稅率計算。</p></details>'+
+   '<p class="disc">本功能是收入情境分析，不是再次檢查免稅額或扣除資格。結果根據你輸入的資料估算，僅供參考；最終稅款以稅務局的評定及適用法例為準。</p>';
+  const mp=$('#X-mpf');if(mp)mp.placeholder='沿用上方輸入';
+  updateAmt();
+}
+function rbRead(X){
+  const out={type:X.type,months:null,monthly:0};
+  if(X.type==='monthly'){
+    const m=parseAmt(X.monthly);if(m.err)throw new Error('每月增加金額：'+m.err);
+    const n=parseAmt(X.months);
+    if(n.err||!Number.isInteger(n.v))throw new Error('適用月數必須是 1 至 12 的整數。');
+    out.extra=rbExtraIncome('monthly',{monthly:m.v,months:n.v});out.months=n.v;out.monthly=m.v;
+  }else{
+    const a=parseAmt(X.amount);if(a.err)throw new Error('新增應課稅金額：'+a.err);
+    out.extra=rbExtraIncome(X.type,{amount:a.v});
+  }
+  const raw=String(X.mpf==null?'':X.mpf).trim();
+  if(raw!==''){const p=parseAmt(raw);if(p.err)throw new Error('強積金強制性供款：'+p.err);out.mpf=p.v}else out.mpf=null;
+  return out;
+}
+function rbAdd(){
+  const er=$('#rb-err');er.textContent='';
+  try{
+    if(RB.length>=3)throw new Error('最多只能同時保留三個情境。請先移除其中一個，再新增。');
+    const r=rbRead(ROOT.X);
+    RB.push({id:++rbid,type:r.type,extra:r.extra,months:r.months,monthly:r.monthly,mpf:r.mpf});
+    update();toast('已加入情境，比較結果顯示於下方。');
+  }catch(e){er.textContent=e.message}
+}
+function rbDetail(b,c){
+  const rl=x=>x.reliefStatus==='unannounced'?'尚未公布（未計入）':HK(x.relief);
+  const m=x=>x.chosen==='standard'?'標準稅率':x.chosen==='equal'?'兩者相同':'累進稅率';
+  const R=[['應評稅入息',HK(b.assessable),HK(c.assessable)],['可扣除項目合計',HK(b.totalDed),HK(c.totalDed)],['入息淨額',HK(b.net),HK(c.net)],['個人免稅額合計',HK(b.totalAllow),HK(c.totalAllow)],['應課稅入息實額',HK(b.taxable),HK(c.taxable)],['累進稅率稅款',HK(b.progressive),HK(c.progressive)],['標準稅率稅款',HK(b.standard),HK(c.standard)],['採用方法',m(b),m(c)],['年度稅款寬減',rl(b),rl(c)]];
+  return '<table class="mini"><thead><tr><th>項目</th><th>原本</th><th>此情境</th></tr></thead><tbody>'+R.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('')+'<tr><td><b>最終薪俸稅</b></td><td><b>'+HK(b.final)+'</b></td><td><b>'+HK(c.final)+'</b></td></tr></tbody></table>';
+}
+function renderRaise(B,base){
+  const out=$('#rb-out');if(!out)return;
+  const X=ROOT.X;
+  $('#rb-f-monthly').hidden=X.type!=='monthly';$('#rb-f-amount').hidden=X.type==='monthly';
+  const al=$('label[for="X-amount"]');if(al)al.textContent=X.type==='bonus'?'額外應課稅花紅金額':'本年度新增的應課稅金額';
+  const mn=$('#rb-mpf-now');if(mn)mn.textContent=HK(B.mpf);
+  const pv=$('#rb-prev');
+  if(pv){
+    const m=parseAmt(X.monthly),n=parseAmt(X.months);
+    pv.textContent=(!m.err&&!n.err&&m.v>0&&Number.isInteger(n.v)&&n.v>=1&&n.v<=12)?'本年度新增收入 ＝ '+HK(m.v)+' × '+n.v+' 個月 ＝ '+HK(m.v*n.v):'';
+  }
+  let h='';
+  if(base.assessable<=0)h+='<div class="banner"><strong>尚未輸入基本收入</strong>「原本情境」目前沒有收入，稅款為零。建議先在上方完成基本稅款計算，比較結果才有參考價值。</div>';
+  if(!RB.length){out.innerHTML=h+'<p class="empty">尚未建立情境。選擇收入類型並輸入金額後，按「模擬增加收入」。</p>';return}
+  const names=rbNames();
+  const rs=RB.map((s,i)=>{const sc=rbCompute(B,s);return{s,sc,name:names[i],sm:rbSummary(base,sc,s.extra)}});
+  const desc=s=>s.type==='monthly'?'每月 '+HK(s.monthly)+' × '+s.months+' 個月':'';
+  const rm=s=>' <button type="button" class="link danger" data-act="rbDel" data-id="'+s.id+'">移除</button>';
+  /* 桌面：表格 */
+  h+='<h3 style="margin-top:0">情境比較</h3><div class="rbt-wrap scroll"><table class="rbt"><caption class="sr">加薪與花紅情境比較</caption><thead><tr><th scope="col">收入情境</th><th scope="col">本年度新增收入</th><th scope="col">新增薪俸稅</th><th scope="col">扣稅後新增收入</th></tr></thead><tbody>'+
+   '<tr class="basis"><th scope="row">原本情境<small>以上方輸入作為比較基準（最終薪俸稅 '+HK(base.final)+'）</small></th><td>—</td><td>—</td><td>—</td></tr>'+
+   rs.map(r=>'<tr><th scope="row">'+esc(r.name)+rm(r.s)+(desc(r.s)?'<small>'+esc(desc(r.s))+'</small>':'')+'</th><td>'+HK(r.sm.extra)+'</td><td>'+HKs(r.sm.extraTax)+'</td><td class="kept">'+HKs(r.sm.kept)+'</td></tr>').join('')+
+   '</tbody></table></div>';
+  /* 手機：卡片 */
+  h+='<div class="rbcards"><div class="rbcard"><strong>原本情境</strong><small>比較基準（最終薪俸稅 '+HK(base.final)+'）</small></div>'+
+   rs.map(r=>'<div class="rbcard"><strong>'+esc(r.name)+'</strong>'+rm(r.s)+(desc(r.s)?'<small>'+esc(desc(r.s))+'</small>':'')+'<dl><dt>本年度新增收入</dt><dd>'+HK(r.sm.extra)+'</dd><dt>新增薪俸稅</dt><dd>'+HKs(r.sm.extraTax)+'</dd><dt>扣稅後新增收入</dt><dd class="kept">'+HKs(r.sm.kept)+'</dd></dl></div>').join('')+'</div>';
+  h+='<p class="hint" style="font-size:13px;color:var(--ink);font-weight:700">「扣稅後新增收入」只反映薪俸稅影響，未扣除新增強積金供款、其他薪金扣項或福利變動。</p>';
+  h+='<p class="hint">計算假設：婚姻狀況、子女、供養親屬及已輸入的進修、醫保、租金等支出維持不變；除非你在情境中另行輸入全年強積金強制性供款，否則原有強積金強制性供款扣除亦維持不變。</p>';
+  if(base.reliefStatus==='unannounced')h+='<div class="banner" style="margin-top:10px">'+esc(S.year)+' 年度稅款寬減尚未公布，本分析未計入寬減。</div>';
+  /* 各情境解釋 */
+  rs.forEach(r=>{
+    const{s,sc,sm,name}=r;
+    h+='<div class="rbx"><h3>'+esc(name)+'</h3>'+
+     '<p class="callout">在此情境下，新增收入為 '+HK(sm.extra)+'，估算新增薪俸稅為 '+HKs(sm.extraTax)+'。只扣除薪俸稅後，你可保留 '+HKs(sm.kept)+'。</p>';
+    h+=sm.ratio==null?'<p class="ratio">新增收入為零，不計算稅款比例。</p>':'<p class="ratio">這筆新增收入的稅款比例：'+pct(sm.ratio)+'</p><p class="hint" style="margin-top:0">＝ 新增薪俸稅 ÷ 新增收入。這是這筆新增收入的稅款比例，並不等於全年實際稅率或最高邊際稅率。</p>';
+    h+='<p class="hint">'+(s.mpf==null?'強積金強制性供款：維持上方輸入（計算假設）。':'強積金強制性供款：此情境改為 '+HK(s.mpf)+'（扣除額已按上限 '+HK(sc.R.cap.mpf)+' 計算）。')+'</p>';
+    rbExplain(base,sc,sm).forEach(t=>{h+='<div class="banner info" style="margin-top:8px">'+esc(t)+'</div>'});
+    h+='<details class="fold" style="margin-top:10px"><summary>查看原本與此情境的計算明細</summary>'+rbDetail(base,sc)+'</details></div>';
+  });
+  out.innerHTML=h;
+}
+
+/* =====================================================================
+   七、結果渲染
+   ===================================================================== */
+const tr=(a,b,cls,desc)=>'<tr class="'+(cls||'')+'"><th scope="row">'+a+(desc?'<small>'+desc+'</small>':'')+'</th><td>'+b+'</td></tr>';
+function notesHTML(c,extra){
+  const all=(extra||[]).concat(c.notes);
+  return all.map(n=>'<div class="banner'+(n.lvl==='info'?' info':n.lvl==='bad'?' bad':'')+'">'+esc(n.text)+'</div>').join('');
+}
+function unsNotes(){
+  const L=[];const u=S.uns;
+  if(u.quarters||u.overseas||u.shares||u.lump)L.push({lvl:'bad',text:'你表示涉及：'+[u.quarters&&'僱主提供住所',u.overseas&&'海外／跨境工作收入',u.shares&&'股份獎賞或股票期權',u.lump&&'一次性收入攤分'].filter(Boolean).join('、')+'。本工具暫未完整處理這些情況，不會替你調整應評稅收入。請先核對應評稅收入，以下結果只供粗略參考。'});
+  const eKeys=Object.keys(errs);if(eKeys.length)L.push({lvl:'warn',text:'部分欄位輸入有誤（'+eKeys.length+' 項），有誤的欄位暫以 0 計算。請按欄位旁的文字提示更正。'});
+  return L;
+}
+function renderSide(c){
+  const yk=S.year;
+  const unann=c.reliefStatus==='unannounced';
+  $('#sum').innerHTML=
+   '<div class="lab">估算最終薪俸稅 · '+yk+'</div><div class="bignum">'+HK(c.final)+'</div>'+
+   '<p class="meta">'+(c.assessable<=0?'請先輸入收入。':'採用'+(c.chosen==='standard'?'標準稅率':c.chosen==='equal'?'累進／標準稅率（結果相同）':'累進稅率')+'計算，已比較兩種方式取較低者。')+'</p>'+
+   (unann?'<div class="banner" style="font-size:13px">本估算未計入尚未公布的年度稅款寬減。</div>':'')+
+   '<dl><div><dt>應評稅入息</dt><dd>'+HK(c.assessable)+'</dd></div><div><dt>可扣除項目</dt><dd>'+HK(c.totalDed)+'</dd></div><div><dt>入息淨額</dt><dd>'+HK(c.net)+'</dd></div><div><dt>個人免稅額</dt><dd>'+HK(c.totalAllow)+'</dd></div><div><dt>應課稅入息實額</dt><dd>'+HK(c.taxable)+'</dd></div><div><dt>年度稅款寬減</dt><dd>'+(unann?'尚未公布':HK(c.relief))+'</dd></div><div><dt>估算實際稅率</dt><dd>'+(c.effRate==null?'—':(c.effRate*100).toFixed(2)+'%')+'</dd></div></dl>'+
+   '<div class="acts"><a class="btn" href="#result">查看計算明細</a><a class="btn red" href="#raise">模擬加薪／花紅</a></div>'+
+   '<p class="note">此金額是指定課稅年度的估算最終薪俸稅，不一定等於稅單上的應繳款項。稅單亦可能包含下一年度暫繳稅，並扣除已繳暫繳稅等款項。</p>';
+  $('#mbar-v').textContent=HK(c.final);$('#mbar-l').textContent='估算最終薪俸稅 · '+yk;
+}
+function renderResult(c){
+  const R=c.R,unann=c.reliefStatus==='unannounced',maxv=Math.max(c.progressive,c.standard,1);
+  const rows=[];
+  rows.push(tr('1　應評稅入息',HK(c.assessable),'sec','薪金＋花紅、佣金及其他應課稅僱傭收入'));
+  rows.push(tr('<span class="tag d">扣除額</span>可扣除項目','','sec',''));
+  if(!c.de.length)rows.push(tr('沒有輸入扣除項目','HK$0','sub'));
+  c.de.forEach(d=>rows.push(tr(esc(d.label),'−'+HK(d.amount),'sub','實際 '+HK(d.actual)+' · 上限 '+d.cap+(d.note?' · '+d.note:''))));
+  rows.push(tr('可扣除項目合計','−'+HK(c.totalDed),'tot'));
+  rows.push(tr('2　入息淨額',HK(c.net),'tot','＝ 應評稅入息 − 可扣除項目（不少於 0）'));
+  rows.push(tr('<span class="tag a">免稅額</span>個人免稅額','','sec','只用於累進稅率計算，不用於標準稅率'));
+  c.al.forEach(a=>rows.push(tr(esc(a.label),'−'+HK(a.amt),'sub',a.note)));
+  rows.push(tr('個人免稅額合計','−'+HK(c.totalAllow),'tot'));
+  rows.push(tr('3　應課稅入息實額',HK(c.taxable),'tot','＝ 入息淨額 − 個人免稅額（不少於 0）'));
+  rows.push(tr('累進稅率稅款',HK(c.progressive),'','按右方稅階逐段計算'));
+  rows.push(tr('標準稅率稅款',HK(c.standard),'','入息淨額（未扣除個人免稅額）：首 HK$5,000,000 按 15%，超過部分按 16%'));
+  rows.push(tr('採用方法',c.chosen==='standard'?'標準稅率':c.chosen==='equal'?'兩者相同':'累進稅率','','系統已比較兩種計算方式，並採用稅款較低的一種。'));
+  rows.push(tr('寬減前稅款',HK(c.preRelief),'tot'));
+  rows.push(tr('<span class="tag r">寬減額</span>年度稅款寬減',unann?'尚未公布':'−'+HK(c.relief),'',unann?'本估算未計入尚未公布的年度稅款寬減。':'100% 寬減，上限 '+HK(R.relief.cap)+'（2026 年 5 月 22 日刊憲）'));
+  rows.push(tr('估算最終薪俸稅 · '+S.year,HK(c.final),'final'));
+  rows.push(tr('估算實際稅率',c.effRate==null?'—':(c.effRate*100).toFixed(2)+'%','','＝ 估算最終薪俸稅 ÷ 應評稅入息；收入為零時不顯示'));
+  $('#result').innerHTML='<span class="kicker">計算結果 · '+S.year+'（'+R.period+'）</span><h2>計算明細</h2><p class="lead">以下由同一計算引擎產生；「加薪與花紅」分析使用相同引擎，確保結果一致。</p>'+
+   notesHTML(c,unsNotes())+
+   '<div class="res-cols"><div class="scroll"><table class="calc"><caption class="sr">薪俸稅計算明細</caption><tbody>'+rows.join('')+'</tbody></table></div>'+
+   '<div><h3 style="margin-top:0">累進稅率稅階</h3><table class="mini"><thead><tr><th>應課稅入息實額部分</th><th>稅率</th><th>該段金額</th><th>稅款</th></tr></thead><tbody>'+
+   c.bands.map(b=>'<tr><td>'+(b.to==null?'餘額（'+HK(b.from)+' 以上）':HK(b.to-b.from>=0&&b.from===0?b.to:b.to-b.from)+(b.from>0?'（'+HK(b.from)+'–'+HK(b.to)+'）':''))+'</td><td>'+(b.rate*100)+'%</td><td>'+HK(b.amt)+'</td><td>'+HK(b.tax)+'</td></tr>').join('')+
+   '<tr><td colspan="3"><b>累進稅率稅款</b></td><td><b>'+HK(c.progressive)+'</b></td></tr></tbody></table>'+
+   '<h3>兩種計算方式比較</h3><div class="bars">'+
+   '<div class="bar'+(c.chosen!=='standard'?' pick':'')+'"><div class="bl"><span>累進稅率（已扣免稅額）</span><span>'+HK(c.progressive)+'</span></div><div class="tr"><div class="fi" style="width:'+(c.progressive/maxv*100)+'%"></div></div></div>'+
+   '<div class="bar'+(c.chosen==='standard'?' pick':'')+'"><div class="bl"><span>標準稅率（未扣免稅額）</span><span>'+HK(c.standard)+'</span></div><div class="tr"><div class="fi" style="width:'+(c.standard/maxv*100)+'%"></div></div></div></div>'+
+   '<p class="callout">系統已比較兩種計算方式，並採用稅款較低的一種。</p>'+
+   '<div class="banner info"><strong>最終稅款與稅單應付款項不同</strong>此金額是指定課稅年度的估算最終薪俸稅，不一定等於稅單上的應繳款項。稅單亦可能包含下一年度暫繳稅，並扣除已繳暫繳稅等款項。本工具首版未支援暫繳稅，故不會顯示「你現在需要繳交的金額」。</div></div></div>'+
+   '<p class="disc">本工具根據你提供的資料及所選課稅年度的稅務規則作估算，僅供參考，不構成稅務、法律或投資建議。免稅額及扣除項目的資格、金額和最終稅款，以香港稅務局的評定及適用法例為準。估算最終薪俸稅不一定等於稅單上的應繳款項。金額顯示至角位，內部不作中間步驟四捨五入；最終稅款尾數處理須以稅務局官方計算為準。</p>';
+}
+function renderStatuses(base){
+  $$('[data-status]').forEach(el=>{
+    const[kind,i]=el.dataset.status.split('.');const a=(kind==='children'?base.kids:base.pars)[+i];if(!a)return;
+    let cls=a.st,t='';
+    if(a.st==='ok'){
+      if(kind==='children'){const A=base.R.allow;t='✓ 符合（'+a.why+'）：子女免稅額 '+HK(A.child)+(a.newborn?'＋初生子女額外免稅額 '+HK(A.extraChild):'')}
+      else if(a.amt!=null)t='✓ 符合：供養免稅額 '+HK(a.amt)+(a.live?'＋額外同住免稅額 '+HK(a.live):'');
+      else t='✓ 符合：可扣除長者住宿照顧開支 '+HK(a.care)+'（上限 '+HK(base.R.cap.elderly)+'）。此親屬不會同時計算供養免稅額。';
+    }else if(a.st==='no')t='✕ 不符合：'+a.reason;
+    else if(a.st==='pending')t='？ 待確認（暫未計入）：'+a.reason;
+    else if(a.st==='incomplete')t='… 資料不足（暫未計入）：'+a.reason;
+    else t='— '+a.reason;
+    el.className='rowstatus '+cls;el.textContent=t;
+  });
+}
+function updateAmt(){
+  const R=RULES[S.year];
+  $$('[data-amt]').forEach(e=>{const v=getP(R,e.dataset.amt);e.textContent=v==null?'':HK(v)});
+  $$('[data-ytext]').forEach(e=>{const k=e.dataset.ytext;e.textContent=k==='yr'?S.year:k==='newborn'?(R.newbornYears===2?'出生後首兩年':'出生當年'):''});
+}
+function applyVis(){
+  $$('[data-showif]').forEach(el=>{const m=el.dataset.showif.match(/^(.+?)(!?=)(.+)$/);const v=String(getP(S,m[1]));el.hidden=!(m[2]==='='?v===m[3]:v!==m[3])});
+  const e=$('#mpfEst');if(e)e.hidden=!S.mpfEst;
+}
+function renderErrors(){
+  $$('[data-err]').forEach(el=>{const k=el.dataset.err,msg=errs[k]||'';el.textContent=msg;
+    const[root,...rest]=k.split('.');const inp=document.getElementById(idOf(root,rest.join('.')));if(inp){if(msg)inp.setAttribute('aria-invalid','true');else inp.removeAttribute('aria-invalid')}});
+}
+function update(){
+  errs={};
+  const B=toInput(),base=calc(B);
+  updateAmt();applyVis();
+  renderSide(base);renderResult(base);renderStatuses(base);
+  renderRaise(B,base);
+  renderErrors();
+}
+
+/* =====================================================================
+   八、事件
+   ===================================================================== */
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,4200)}
+function rerender(spec){
+  if(spec==='vis')return;
+  if(spec==='year'){$('#latest').innerHTML='<h2>'+S.year+' 重點</h2>'+highlights(S.year).map((h,i)=>'<li'+(h[0].startsWith('建議')?' class="dim"':'')+'><em>'+h[0]+'</em>'+h[1]+'</li>').join('');
+    toast('已切換至 '+S.year+'：稅率、免稅額、扣除上限及稅款寬減已同步更新。');return}
+  const[t,n]=spec.split(':');
+  if(t==='list')renderList(n);
+}
+function setVal(root,p){const el=document.getElementById(idOf(root,p));if(el)el.value=getP(ROOT[root],p)}
+function onField(e){
+  const t=e.target;if(!t.dataset||!t.dataset.p||!ROOT[t.dataset.root])return;
+  let v;
+  if(t.type==='checkbox')v=t.checked;else if(t.type==='radio'){if(!t.checked)return;v=t.value}else v=t.value;
+  setP(ROOT[t.dataset.root],t.dataset.p,v);
+  if(t.dataset.root==='S'&&t.dataset.p==='mpf')S.mpfEst=false;
+  if(t.dataset.re)rerender(t.dataset.re);
+  update();
+}
+document.addEventListener('input',onField);document.addEventListener('change',onField);
+document.addEventListener('focusout',e=>{
+  const t=e.target;if(!t.dataset||t.dataset.kind!=='money')return;
+  const p=parseAmt(t.value);if(!p.err&&t.value.trim()!==''){const s=p.v.toLocaleString('en-US',{maximumFractionDigits:2});t.value=s;setP(ROOT[t.dataset.root],t.dataset.p,s);update()}
+});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act;
+  if(a==='add'){const n=b.dataset.list;S[n].push(n==='children'?newChild():n==='parents'?newParent():{premium:''});renderList(n);update()}
+  else if(a==='del'){S[b.dataset.list].splice(+b.dataset.i,1);renderList(b.dataset.list);update()}
+  else if(a==='applyMonthly'){const m=parseAmt(S.monthly),n=Number(S.months||12);if(m.err||!(n>=0&&n<=12)){toast('請先輸入有效的月薪及 0–12 的工作月數。');return}S.salary=String(r2(m.v*n));setVal('S','salary');update();toast('已套用：全年薪金 = 月薪 × 工作月數。花紅等收入請另行輸入。')}
+  else if(a==='estMpf'){const m=parseAmt(S.monthly),n=Number(S.months||12);if(m.err||!(n>=0&&n<=12)){toast('請先輸入有效的月薪及 0–12 的工作月數。');return}const per=m.v<7100?0:Math.min(m.v*0.05,1500);S.mpf=String(r2(per*n));S.mpfEst=true;setVal('S','mpf');update();toast('已填入估算的強積金強制性供款，請以實際供款額為準。')}
+  else if(a==='sample'){const y=S.year;resetAll();S.year=y;S.salary='600,000';S.mpf='18,000';fullRender();toast('已載入範例：全年薪金 HK$600,000、強積金強制性供款 HK$18,000。')}
+  else if(a==='reset'){const y=S.year;resetAll();S.year=y;fullRender();toast('已清除所有資料。')}
+  else if(a==='rbAdd'){rbAdd()}
+  else if(a==='rbDel'){RB=RB.filter(x=>x.id!==+b.dataset.id);update();toast('已移除該情境。')}
+  else if(a==='rbClear'){RB=[];const er=$('#rb-err');if(er)er.textContent='';update();toast('已清除所有情境。')}
+});
+function resetAll(){ROOT.S=freshS();ROOT.X=freshX();S=ROOT.S;RB=[]}
+function fullRender(){
+  buildForm();renderRaiseShell();
+  $('#S-year').value=S.year;
+  rerender('year');update();
+}
+
+/* =====================================================================
+   九、計算引擎自動測試（結果輸出至瀏覽器主控台）
+   ===================================================================== */
+function runTests(){
+  const mk=o=>Object.assign({year:'2026/27',salary:0,bonus:0,mpf:0,marital:'single',spouseIncome:'',singleParent:false,disabledSelf:false,disabledDeps:0,siblings:0,children:[],parents:[],edu:0,vhis:[],tvc:0,annuity:0,hli:0,hliYear:1,rent:0,extraCap:false,fertility:0,spouseFert:0,donation:0,workExp:0},o);
+  const kid=(dob,x)=>Object.assign({dob,unmarried:true,fte:false,disabled:false,claimed:'no'},x||{});
+  const par=(dob,x)=>Object.assign({dob,disab:false,hk:'yes',supported:'yes',livesWith:false,claimed:'no',mode:'allowance',careAmt:0},x||{});
+  const T=[],t=(n,g,e)=>T.push({n,g,e,ok:typeof e==='number'?Math.abs(g-e)<0.005:g===e});
+  /* --- 基本引擎 --- */
+  const c1=calc(mk({year:'2025/26',salary:600000,mpf:18000}));
+  t('11.1 累進稅率稅款 2025/26',c1.progressive,58500);t('11.1 標準稅率稅款',c1.standard,87300);t('11.1 估算最終薪俸稅（含寬減 3,000）',c1.final,55500);
+  const c2=calc(mk({year:'2025/26',salary:600000,mpf:18000,edu:10000}));
+  t('11.2 加入進修 10,000：最終稅款',c2.final,53800);t('11.2 估算可節省稅款',c1.final-c2.final,1700);
+  const c26=calc(mk({salary:600000,mpf:18000}));t('2026/27 同一收入：最終稅款（免稅額 145,000，不計寬減）',c26.final,56290);t('2026/27 不假設寬減',c26.relief,0);
+  const z=calc(mk());t('零收入：最終稅款',z.final,0);t('零收入：實際稅率避免除以零',z.effRate,null);
+  t('免稅額高於收入：最終稅款',calc(mk({salary:100000})).final,0);
+  t('扣除高於收入：入息淨額為 0',calc(mk({salary:50000,edu:100000})).net,0);
+  [[50000,1000],[100000,4000],[150000,9000],[200000,16000],[250000,24500]].forEach(([x,e])=>t('稅階邊界：應課稅入息實額 '+x.toLocaleString(),progressive(x).tax,e));
+  t('入息淨額剛好 5,000,000：標準稅率',calc(mk({salary:5000000})).standard,750000);
+  t('入息淨額 5,000,100：標準稅率',calc(mk({salary:5000100})).standard,750016);
+  t('已婚（配偶無收入）免稅額不與基本免稅額相加',calc(mk({salary:500000,marital:'married',spouseIncome:'no'})).totalAllow,290000);
+  t('已婚但配偶有收入：只計基本免稅額',calc(mk({salary:500000,marital:'married',spouseIncome:'yes'})).totalAllow,145000);
+  const nb=(y,d)=>calc(mk({year:y,children:[kid(d)]})).kids[0];
+  t('2026/27 子女 2025-04-01 出生：符合初生額外免稅額',nb('2026/27','2025-04-01').newborn,true);
+  t('2026/27 子女 2025-03-31 出生：不符合額外免稅額',nb('2026/27','2025-03-31').newborn,false);
+  t('2025/26 子女 2025-03-31 出生：不符合額外免稅額（只限出生當年）',nb('2025/26','2025-03-31').newborn,false);
+  t('可扣稅自願性供款＋延期年金超過上限：合計 60,000',calc(mk({salary:1000000,tvc:40000,annuity:40000})).totalDed,60000);
+  const ce=calc(mk({salary:1000000,parents:[par('1950-01-01',{mode:'care',careAmt:150000})]}));
+  t('長者住宿照顧開支（2026/27）上限 110,000',ce.totalDed,110000);t('長者住宿照顧與供養免稅額不重複：只有基本免稅額',ce.totalAllow,145000);
+  t('慈善捐款 35% 上限',calc(mk({salary:1000000,donation:500000})).totalDed,350000);
+  t('切換課稅年度：2025/26 基本免稅額',calc(mk({year:'2025/26',salary:300000})).totalAllow,132000);
+  t('切換課稅年度：2026/27 基本免稅額',calc(mk({year:'2026/27',salary:300000})).totalAllow,145000);
+  /* --- 加薪與花紅（對應功能文件 9.9） --- */
+  const B1=mk({year:'2025/26',salary:600000,mpf:18000}),b1=calc(B1);
+  const s1=rbCompute(B1,{extra:30000,mpf:null}),m1=rbSummary(b1,s1,30000);
+  t('9.9 基本案例：應評稅收入',s1.assessable,630000);t('9.9 基本案例：入息淨額',s1.net,612000);t('9.9 基本案例：應課稅入息實額',s1.taxable,480000);
+  t('9.9 基本案例：累進稅率稅款',s1.progressive,63600);t('9.9 基本案例：標準稅率稅款',s1.standard,91800);t('9.9 基本案例：最終薪俸稅',s1.final,60600);
+  t('9.9 基本案例：新增薪俸稅',m1.extraTax,5100);t('9.9 基本案例：扣稅後新增收入',m1.kept,24900);t('9.9 基本案例：新增收入稅款比例',m1.ratio,17);
+  t('9.9 原本最終薪俸稅不受模擬影響',calc(B1).final,55500);
+  const B2=mk({year:'2025/26',salary:200000}),b2=calc(B2),s2=rbCompute(B2,{extra:150000,mpf:null});
+  t('9.9 新增收入跨越多個累進稅階',rbBandsTouched(b2,s2)>=2,true);
+  t('9.9 新增收入只涉及單一稅階',rbBandsTouched(b2,rbCompute(B2,{extra:10000,mpf:null})),1);
+  const B3=mk({year:'2025/26',salary:100000}),b3=calc(B3),s3=rbCompute(B3,{extra:20000,mpf:null});
+  t('9.9 原本及模擬情境最終稅款均為零',b3.final===0&&s3.final===0,true);
+  t('9.9 兩者為零：新增薪俸稅為零',rbSummary(b3,s3,20000).extraTax,0);
+  const B4=mk({year:'2025/26',salary:150000}),b4=calc(B4),s4=rbCompute(B4,{extra:100000,mpf:null});
+  t('9.9 零稅款變為需要繳稅：原本最終稅款',b4.final,0);t('9.9 零稅款變為需要繳稅：模擬最終稅款',s4.final,2800);t('9.9 零稅款變為需要繳稅：新增薪俸稅',rbSummary(b4,s4,100000).extraTax,2800);
+  const B5=mk({year:'2025/26',salary:1500000}),b5=calc(B5),s5=rbCompute(B5,{extra:1000000,mpf:null});
+  t('9.9 計算方式改變：原本採用累進稅率',b5.chosen,'progressive');t('9.9 計算方式改變：模擬後採用標準稅率',s5.chosen,'standard');
+  const B6=mk({year:'2025/26',salary:200000,donation:100000}),b6=calc(B6),s6=rbCompute(B6,{extra:100000,mpf:null});
+  t('9.9 慈善捐款上限隨收入改變：原本扣除額',b6.totalDed,70000);t('9.9 慈善捐款上限隨收入改變：模擬後扣除額',s6.totalDed,100000);
+  t('9.9 加薪只適用部分月份（3 個月）',rbExtraIncome('monthly',{monthly:10000,months:3}),30000);
+  t('9.9 部分月份加薪與同額花紅結果一致',rbCompute(B1,{extra:rbExtraIncome('monthly',{monthly:10000,months:3}),mpf:null}).final,60600);
+  let bad=false;try{rbExtraIncome('monthly',{monthly:1,months:13})}catch(_){bad=true}
+  t('9.9 月數 13 被拒絕',bad,true);
+  bad=false;try{rbExtraIncome('monthly',{monthly:1,months:0})}catch(_){bad=true}
+  t('9.9 月數 0 被拒絕',bad,true);
+  t('9.9 新增收入為零：不計算比例（避免除以零）',rbSummary(b1,rbCompute(B1,{extra:0,mpf:null}),0).ratio,null);
+  t('9.7 強積金供款超過上限：按 18,000 計算（與原本相同）',rbCompute(B1,{extra:0,mpf:30000}).final,55500);
+  t('9.7 強積金供款降至 12,000：稅款上升',rbCompute(B1,{extra:0,mpf:12000}).final,56520);
+  const passed=T.filter(x=>x.ok).length;
+  console.log('[薪俸稅計算器] 自動測試：'+passed+'/'+T.length+' 項通過');
+  T.filter(x=>!x.ok).forEach(x=>console.warn('測試失敗：'+x.n+'（實際 '+x.g+'，預期 '+x.e+'）'));
+}
+
+/* =====================================================================
+   十、初始化
+   ===================================================================== */
+$('#today').textContent=new Date().toLocaleDateString('zh-HK',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+fullRender();
+runTests();
+const navLinks=$$('.sections a');
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting)navLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+en.target.id))}),{rootMargin:'-30% 0px -60% 0px'});
+['hero','income','family','deductions','result','raise'].forEach(id=>{const el=document.getElementById(id);if(el)io.observe(el)});
+</script>
+
+
+</body></html>
